@@ -38,7 +38,7 @@ Parameters:
   SshCidr:
     Description: The IP range for EC2 instances
     Type: String
-    Default: 0.0.0.0/0
+    Default: 0.0.0.0/0    
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
 
 Resources:
@@ -269,32 +269,40 @@ Resources:
       InstanceType: t2.micro
       SecurityGroups:
         - !Ref EC2SecurityGroup
+      # UserData: !Base64
+      #   'Fn::Join':
+      #     - ''
+      #     - - '#!/bin/bash -ex'
+      #       - |+
+
+      #       - yum -y install httpd
+      #       - |+
+
+      #       - chkconfig httpd on
+      #       - |+
+
+      #       - 'echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance  '
+      #       - $(hostname -f)
+      #       - '</h2></html>" >> /var/www/html/index.html'
+      #       - |+
+
+      #       - service httpd start
+      #       - |+
+
+      #       - '/opt/aws/bin/cfn-signal -e 0 --region '
+      #       - !Ref 'AWS::Region'
+      #       - ' --stack '
+      #       - !Ref 'AWS::StackName'
+      #       - ' --resource AutoScalingGroup'
+      #       - |+
       UserData: !Base64
-        'Fn::Join':
-          - ''
-          - - '#!/bin/bash -ex'
-            - |+
-
-            - yum -y install httpd
-            - |+
-
-            - chkconfig httpd on
-            - |+
-
-            - 'echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance  '
-            - $(hostname -f)
-            - '</h2></html>" >> /var/www/html/index.html'
-            - |+
-
-            - service httpd start
-            - |+
-
-            - '/opt/aws/bin/cfn-signal -e 0 --region '
-            - !Ref 'AWS::Region'
-            - ' --stack '
-            - !Ref 'AWS::StackName'
-            - ' --resource AutoScalingGroup'
-            - |+
+        !Sub |
+          #!/bin/bash -ex
+          yum -y install httpd          
+          chkconfig httpd on
+          echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance $(hostname -f)</h2></html>" >> /var/www/html/index.html
+          service httpd start
+          /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup          
 
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
