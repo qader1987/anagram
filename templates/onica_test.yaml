@@ -71,7 +71,7 @@ Resources:
       CidrBlock: !Ref PubSubnet2CIDR
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Owner
+        - Key: Name
           Value: !Sub ${Env} Public Subnet 2
 
   PrivSubnet1:
@@ -82,7 +82,7 @@ Resources:
       CidrBlock: !Ref PrivSubnet1CIDR
       MapPublicIpOnLaunch: false
       Tags:
-        - Key: Owner
+        - Key: Name
           Value: !Sub ${Env} Private Subnet 1
 
   PrivSubnet2:
