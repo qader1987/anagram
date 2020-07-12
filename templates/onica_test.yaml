@@ -1,0 +1,382 @@
+Description:
+  This template creates a VPC with two public and private subnets. 
+  It will create Internet Gateway, with a default route and also two NAT gateways, one for each private subnet.
+  It will create ELB, EC2 instances, security groups, AutoScaling, Alarms, ScaleUp and ScaleDown policies.
+
+Parameters:
+  Env:
+    Description: An environment name
+    Type: String
+  VpcCIDR:
+    Description: Please enter CIDR for this VPC
+    Type: String
+    Default: 10.10.0.0/16
+  PubSubnet1CIDR:
+    Description: Please enter CIDR for the public subnet 1
+    Type: String
+    Default: 10.10.1.0/24
+  PubSubnet2CIDR:
+    Description: Please enter CIDR for the public subnet 2
+    Type: String
+    Default: 10.10.2.0/24
+  PrivSubnet1CIDR:
+    Description: Please enter CIDR for the private subnet 1
+    Type: String
+    Default: 10.10.3.0/24
+  PrivSubnet2CIDR:
+    Description: Please enter CIDR for the private subnet 2
+    Type: String
+    Default: 10.10.4.0/24  
+  KeyName:
+    Description: The EC2 Key Pair 
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair
+  AMI:
+    Description: "AMI for EC2 instances"
+    Type: String
+    Default: 'ami-08f3d892de259504d' #using the latest amazon linux AMI available
+  SshCidr:
+    Description: The IP range for EC2 instances
+    Type: String
+    Default: 0.0.0.0/0    
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env} VPC
+
+  PubSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PubSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${Env} Public Subnet 1
+
+  PubSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PubSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Owner
+          Value: !Sub ${Env} Public Subnet 2
+
+  PrivSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PrivSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Owner
+          Value: !Sub ${Env} Private Subnet 1
+
+  PrivSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PrivSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Owner
+          Value: !Sub ${Env} Private Subnet 2
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Owner
+          Value: !Ref Env
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PubSubnet1
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PubSubnet2
+
+  PubRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Owner
+          Value: !Sub ${Env} Public Routes
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PubRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PubSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PubRouteTable
+      SubnetId: !Ref PubSubnet1
+
+  PubSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PubRouteTable
+      SubnetId: !Ref PubSubnet2
+
+
+  PrivRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Owner
+          Value: !Sub ${Env} Private Routes 1
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivRouteTable1
+      SubnetId: !Ref PrivSubnet1
+
+  PrivRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Owner
+          Value: !Sub ${Env} Private Routes 2
+
+  DefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
+
+  PrivSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivRouteTable2
+      SubnetId: !Ref PrivSubnet2
+
+  ELBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: ELB-SG
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      VpcId: !Ref VPC
+
+  ELB:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      ConnectionDrainingPolicy:
+        Enabled: true
+        Timeout: 30
+      CrossZone: true
+      HealthCheck:
+        HealthyThreshold: '2'
+        Interval: '10'
+        Target: 'HTTP:80/'
+        Timeout: '5'
+        UnhealthyThreshold: '2'
+      LoadBalancerName: elb
+      Listeners:
+        - InstancePort: '80'
+          InstanceProtocol: HTTP
+          LoadBalancerPort: '80'
+          Protocol: HTTP
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ELBSecurityGroup
+      Subnets: [!Ref PubSubnet1, !Ref PubSubnet2]
+
+  EC2SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: EC2-SG
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - CidrIp: !Ref SshCidr
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        - FromPort: 80
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref ELBSecurityGroup
+          ToPort: 80
+      VpcId: !Ref VPC
+
+  LaunchConfiguration:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      KeyName: !Ref KeyName
+      AssociatePublicIpAddress: true
+      ImageId: !Ref AMI
+      InstanceType: t2.micro
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      UserData: 
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -ex
+            yum -y install httpd          
+            chkconfig httpd on
+            echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance $(hostname -f)</h2></html>" >> /var/www/html/index.html
+            service httpd start
+            /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup          
+
+  AutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      MinSize: '2'
+      MaxSize: '3'
+      DesiredCapacity: '2'
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      VPCZoneIdentifier: [!Ref PrivSubnet1, !Ref PrivSubnet1]
+      LoadBalancerNames:
+        - !Ref ELB
+      HealthCheckGracePeriod: 60
+      HealthCheckType: ELB
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '2'
+        MinInstancesInService: '1'
+        PauseTime: PT10M
+        SuspendProcesses:
+          - AlarmNotification
+        WaitOnResourceSignals: true
+
+  WebServerScaleUpPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '1'
+
+  WebServerScaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
+
+  CpuAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 80% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '2'
+      Threshold: '90'
+      AlarmActions:
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref AutoScalingGroup
+      ComparisonOperator: GreaterThanThreshold
+
+  CpuAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 60% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '2'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref AutoScalingGroup
+      ComparisonOperator: LessThanThreshold
+
+Outputs:
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref VPC
+    Export:
+      Name: !Sub '${AWS::StackName}-VPCID'
+
+  PubSubnets:
+    Description: A list of the public subnets
+    Value: !Join [ ",", [ !Ref PubSubnet1, !Ref PubSubnet2 ]]
+    Export:
+      Name: !Sub '${AWS::StackName}-PubSubnets'
+
+  PrivSubnets:
+    Description: A list of the private subnets
+    Value: !Join [ ",", [ !Ref PrivSubnet1, !Ref PrivSubnet2 ]]
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivSubnets'
+  ELB:
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - ELB
+          - DNSName
+    Description: URL of the load balancer
