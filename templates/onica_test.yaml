@@ -280,7 +280,7 @@ Resources:
             - chkconfig httpd on
             - |+
 
-            - 'echo "<html><h1>Welcom, this is a test site!!</h1><br><h2>You are on host '
+            - 'echo "<html><h1>Welcom, this is a test site!!</h1><br><h2>You are currently directed to the instance  '
             - $(hostname -f)
             - '</h2></html>" >> /var/www/html/index.html'
             - |+
@@ -295,6 +295,31 @@ Resources:
             - ' --resource AutoScalingGroup'
             - |+
 
+  AutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      MinSize: '2'
+      MaxSize: '3'
+      DesiredCapacity: '2'
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      VPCZoneIdentifier: [!Ref PrivSubnet1, !Ref PrivSubnet1]
+      LoadBalancerNames:
+        - !Ref ELB
+      HealthCheckGracePeriod: 60
+      HealthCheckType: ELB
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '2'
+        MinInstancesInService: '1'
+        PauseTime: PT10M
+        SuspendProcesses:
+          - AlarmNotification
+        WaitOnResourceSignals: true
+        
 Outputs:
   VPC:
     Description: A reference to the created VPC
