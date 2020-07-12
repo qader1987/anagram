@@ -169,7 +169,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Owner
-          Value: !Sub ${Env} Private Routes (AZ1)
+          Value: !Sub ${Env} Private Routes 1
 
   DefaultPrivateRoute1:
     Type: AWS::EC2::Route
@@ -190,7 +190,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Owner
-          Value: !Sub ${Env} Private Routes (AZ2)
+          Value: !Sub ${Env} Private Routes 2
 
   DefaultPrivateRoute2:
     Type: AWS::EC2::Route
@@ -217,7 +217,7 @@ Resources:
           FromPort: 80
           IpProtocol: tcp
           ToPort: 80
-      VpcId: !Sub [!Ref VPC] VPCID 
+      VpcId: !Ref VPC
   ELB:
     Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
     Properties:
@@ -240,7 +240,7 @@ Resources:
       Scheme: internet-facing
       SecurityGroups:
         - !Ref ELBSecurityGroup
-      Subnets: !Sub [!Ref VPC]-PublicSubnets
+      Subnets: [!Ref PubSubnet1, !Ref PubSubnet2]
 
 
 Outputs:
