@@ -242,6 +242,58 @@ Resources:
         - !Ref ELBSecurityGroup
       Subnets: [!Ref PubSubnet1, !Ref PubSubnet2]
 
+  EC2SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: EC2-SG
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - CidrIp: !Ref SshCidr
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+        - FromPort: 80
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref ELBSecurityGroup
+          ToPort: 80
+      VpcId: !Ref VPC
+  LaunchConfiguration:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      KeyName: !Ref KeyName
+      AssociatePublicIpAddress: true
+      ImageId: !Ref AMI
+      InstanceType: t2.micro
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      UserData: !Base64
+        'Fn::Join':
+          - ''
+          - - '#!/bin/bash -ex'
+            - |+
+
+            - yum -y install httpd
+            - |+
+
+            - chkconfig httpd on
+            - |+
+
+            - 'echo "<html><h1>Welcom, this is a test site!!</h1><br><h2>You are on host '
+            - $(hostname -f)
+            - '</h2></html>" >> /var/www/html/index.html'
+            - |+
+
+            - service httpd start
+            - |+
+
+            - '/opt/aws/bin/cfn-signal -e 0 --region '
+            - !Ref 'AWS::Region'
+            - ' --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource AutoScalingGroup'
+            - |+
 
 Outputs:
   VPC:
