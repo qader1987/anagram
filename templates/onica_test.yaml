@@ -304,7 +304,7 @@ Resources:
           - AlarmNotification
         WaitOnResourceSignals: true
 
-  WebServerScaleUpPolicy:
+  scaleUpPolicy:
     Type: 'AWS::AutoScaling::ScalingPolicy'
     Properties:
       AdjustmentType: ChangeInCapacity
@@ -312,7 +312,7 @@ Resources:
       Cooldown: '60'
       ScalingAdjustment: '1'
 
-  WebServerScaleDownPolicy:
+  scaleDownPolicy:
     Type: 'AWS::AutoScaling::ScalingPolicy'
     Properties:
       AdjustmentType: ChangeInCapacity
@@ -331,7 +331,7 @@ Resources:
       EvaluationPeriods: '2'
       Threshold: '90'
       AlarmActions:
-        - !Ref WebServerScaleUpPolicy
+        - !Ref scaleUpPolicy
       Dimensions:
         - Name: AutoScalingGroupName
           Value: !Ref AutoScalingGroup
@@ -348,7 +348,7 @@ Resources:
       EvaluationPeriods: '2'
       Threshold: '70'
       AlarmActions:
-        - !Ref WebServerScaleDownPolicy
+        - !Ref scaleDownPolicy
       Dimensions:
         - Name: AutoScalingGroupName
           Value: !Ref AutoScalingGroup
