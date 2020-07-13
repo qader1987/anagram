@@ -16,6 +16,6 @@ the CloudWatch alarm which will trigger the scaling policy.
 
 Approach 2:
 Below scripts can be executed which will trigger the scaling policies
-scaleup.sh can be used to execute scaleUpPolicy via aws-cli
-scaledown.sh can be used to execute scaleDownPolicy via aws-cli
+"scripts/scaleup.sh" can be used to execute scaleUpPolicy via aws-cli
+"scripts/scaledown.sh" can be used to execute scaleDownPolicy via aws-cli
 
