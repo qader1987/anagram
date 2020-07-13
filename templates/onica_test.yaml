@@ -330,7 +330,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '180'
-      EvaluationPeriods: '2'
+      EvaluationPeriods: '1'
       Threshold: '80'
       AlarmActions:
         - !Ref scaleUpPolicy
@@ -342,12 +342,12 @@ Resources:
   CpuAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 60% for 3 minutes
+      AlarmDescription: Scale-down if CPU < 50% for 3 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
       Period: '180'
-      EvaluationPeriods: '2'
+      EvaluationPeriods: '1'
       Threshold: '50'
       AlarmActions:
         - !Ref scaleDownPolicy
