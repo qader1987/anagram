@@ -1,4 +1,5 @@
-# Onica test
+
+
 This repo conists of devops test for Onica
 It creates basic infrastructure for a webserver. 
 
@@ -18,4 +19,3 @@ Approach 2:
 Below scripts can be executed which will trigger the scaling policies
 "scripts/scaleup.sh" -> can be used to execute scaleUpPolicy via aws-cli
 "scripts/scaledown.sh" -> can be used to execute scaleDownPolicy via aws-cli
-
