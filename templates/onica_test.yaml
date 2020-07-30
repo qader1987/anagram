@@ -39,7 +39,7 @@ Parameters:
     Description: The IP range for EC2 instances
     Type: String
     Default: 0.0.0.0/0    
-    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ##AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
 
 Resources:
   VPC:
@@ -71,7 +71,7 @@ Resources:
       CidrBlock: !Ref PubSubnet2CIDR
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Owner
+        - Key: Name
           Value: !Sub ${Env} Public Subnet 2
 
   PrivSubnet1:
@@ -82,7 +82,7 @@ Resources:
       CidrBlock: !Ref PrivSubnet1CIDR
       MapPublicIpOnLaunch: false
       Tags:
-        - Key: Owner
+        - Key: Name
           Value: !Sub ${Env} Private Subnet 1
 
   PrivSubnet2:
@@ -93,14 +93,14 @@ Resources:
       CidrBlock: !Ref PrivSubnet2CIDR
       MapPublicIpOnLaunch: false
       Tags:
-        - Key: Owner
+        - Key: Name
           Value: !Sub ${Env} Private Subnet 2
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
-        - Key: Owner
+        - Key: Name
           Value: !Ref Env
 
   InternetGatewayAttachment:
@@ -167,7 +167,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-        - Key: Owner
+        - Key: Name
           Value: !Sub ${Env} Private Routes 1
 
   DefaultPrivateRoute1:
@@ -273,6 +273,8 @@ Resources:
         Fn::Base64:
           !Sub |
             #!/bin/bash -ex
+            sudo amazon-linux-extras install epel -y
+            yum install stress -y
             yum -y install httpd          
             chkconfig httpd on
             echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance $(hostname -f)</h2></html>" >> /var/www/html/index.html
@@ -294,17 +296,17 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Count: 1
-        Timeout: PT10M
+        Timeout: PT3M
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MaxBatchSize: '2'
         MinInstancesInService: '1'
-        PauseTime: PT10M
+        PauseTime: PT3M
         SuspendProcesses:
           - AlarmNotification
         WaitOnResourceSignals: true
 
-  WebServerScaleUpPolicy:
+  scaleUpPolicy:
     Type: 'AWS::AutoScaling::ScalingPolicy'
     Properties:
       AdjustmentType: ChangeInCapacity
@@ -312,7 +314,7 @@ Resources:
       Cooldown: '60'
       ScalingAdjustment: '1'
 
-  WebServerScaleDownPolicy:
+  scaleDownPolicy:
     Type: 'AWS::AutoScaling::ScalingPolicy'
     Properties:
       AdjustmentType: ChangeInCapacity
@@ -323,15 +325,15 @@ Resources:
   CpuAlarmHigh:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-up if CPU > 80% for 10 minutes
+      AlarmDescription: Scale-up if CPU > 80% for 3 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '90'
+      Period: '180'
+      EvaluationPeriods: '1'
+      Threshold: '80'
       AlarmActions:
-        - !Ref WebServerScaleUpPolicy
+        - !Ref scaleUpPolicy
       Dimensions:
         - Name: AutoScalingGroupName
           Value: !Ref AutoScalingGroup
@@ -340,15 +342,15 @@ Resources:
   CpuAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 60% for 10 minutes
+      AlarmDescription: Scale-down if CPU < 50% for 3 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '70'
+      Period: '180'
+      EvaluationPeriods: '1'
+      Threshold: '50'
       AlarmActions:
-        - !Ref WebServerScaleDownPolicy
+        - !Ref scaleDownPolicy
       Dimensions:
         - Name: AutoScalingGroupName
           Value: !Ref AutoScalingGroup
