@@ -284,24 +284,24 @@ Resources:
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      MinSize: '2'
+      MinSize: '1'
       MaxSize: '3'
-      DesiredCapacity: '2'
+      DesiredCapacity: '1'
       LaunchConfigurationName: !Ref LaunchConfiguration
       VPCZoneIdentifier: [!Ref PrivSubnet1, !Ref PrivSubnet1]
       LoadBalancerNames:
         - !Ref ELB
-      HealthCheckGracePeriod: 60
+      HealthCheckGracePeriod: 180
       HealthCheckType: ELB
     CreationPolicy:
       ResourceSignal:
         Count: 1
-        Timeout: PT3M
+        Timeout: PT10M
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MaxBatchSize: '2'
         MinInstancesInService: '1'
-        PauseTime: PT3M
+        PauseTime: PT10M
         SuspendProcesses:
           - AlarmNotification
         WaitOnResourceSignals: true
