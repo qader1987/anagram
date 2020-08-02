@@ -277,6 +277,11 @@ Resources:
             yum install stress -y
             yum -y install httpd          
             chkconfig httpd on
+            sudo yum update -y
+            sudo amazon-linux-extras install docker
+            sudo yum install docker
+            sudo service docker start
+            sudo usermod -a -G docker ec2-user
             echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance $(hostname -f)</h2></html>" >> /var/www/html/index.html
             service httpd start
             /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup          

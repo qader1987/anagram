@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  anagram:
+    container_name: anagram
+    image: qader/anagram:1.0
+    restart: always
+    ports:
+      - "80:80"
+      - "5000:5000"
