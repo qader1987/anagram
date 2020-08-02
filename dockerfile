@@ -10,7 +10,7 @@ COPY ./application/frontend/app/ .
 
 RUN pip3 install -r requirements.txt
 
-COPY ./frontend/nginx.conf /etc/nginx/nginx.conf
+COPY ./application/frontend/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 5000 80
 
