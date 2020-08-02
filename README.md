@@ -19,3 +19,4 @@ Approach 2:
 Below scripts can be executed which will trigger the scaling policies
 "scripts/scaleup.sh" -> can be used to execute scaleUpPolicy via aws-cli
 "scripts/scaledown.sh" -> can be used to execute scaleDownPolicy via aws-cli
+
