@@ -34,7 +34,7 @@ Parameters:
   AMI:
     Description: "AMI for EC2 instances"
     Type: String
-    Default: 'ami-0ac80df6eff0e70b5' #using ubuntu-18.04
+    Default: ami-0ac80df6eff0e70b5 #using ubuntu-18.04
 
 Resources:
   VPC:
