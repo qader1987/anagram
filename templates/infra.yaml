@@ -34,12 +34,7 @@ Parameters:
   AMI:
     Description: "AMI for EC2 instances"
     Type: String
-    Default: 'ami-0d221091ef7082bcf' #using ubuntu-18.04
-  # SshCidr:
-  #   Description: The IP range for EC2 instances
-  #   Type: String
-  #   Default: 0.0.0.0/0    
-  #   ##AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    Default: 'ami-0ac80df6eff0e70b5' #using ubuntu-18.04
 
 Resources:
   VPC:
@@ -250,10 +245,6 @@ Resources:
         - IpProtocol: '-1'
           CidrIp: 0.0.0.0/0
       SecurityGroupIngress:
-        # - CidrIp: !Ref SshCidr
-        #   FromPort: 22
-        #   IpProtocol: tcp
-        #   ToPort: 22
         - FromPort: 80
           IpProtocol: tcp
           SourceSecurityGroupId: !Ref ELBSecurityGroup
@@ -283,11 +274,13 @@ Resources:
             # sudo service docker start
             # sudo usermod -a -G docker ec2-user
             sudo apt-get update
-            sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+            sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
             sudo apt-get update
-            sudo apt-get install docker-ce docker-ce-cli containerd.io
+            sudo apt-get -y install docker-ce docker-ce-cli containerd.io
             sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
             sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo usermod -a -G docker ubuntu
+            newgrp docker
             docker run -itd -p 80:80 -p 5000:5000 --name anagram qader/anagram:1.0
             # echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance $(hostname -f)</h2></html>" >> /var/www/html/index.html
             # service httpd start
@@ -303,7 +296,7 @@ Resources:
       VPCZoneIdentifier: [!Ref PrivSubnet1, !Ref PrivSubnet1]
       LoadBalancerNames:
         - !Ref ELB
-      HealthCheckGracePeriod: 180
+      HealthCheckGracePeriod: 360
       HealthCheckType: ELB
     CreationPolicy:
       ResourceSignal:
