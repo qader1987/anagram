@@ -249,6 +249,14 @@ Resources:
           IpProtocol: tcp
           SourceSecurityGroupId: !Ref ELBSecurityGroup
           ToPort: 80
+        - FromPort: 8080
+          IpProtocol: tcp
+          CidrIp: 140.82.112.0/20   # Required for github-jenkins webhook
+          ToPort: 8080
+        - FromPort: 8080
+          IpProtocol: tcp
+          CidrIp: 192.30.252.0/22    # Required for github-jenkins webhook
+          ToPort: 8080                    
       VpcId: !Ref VPC
 
   LaunchConfiguration:
