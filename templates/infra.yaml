@@ -276,11 +276,14 @@ Resources:
             # yum install stress -y
             # yum -y install httpd          
             # chkconfig httpd on
+
             # sudo yum update -y
             # sudo amazon-linux-extras install docker
             # sudo yum install docker
             # sudo service docker start
             # sudo usermod -a -G docker ec2-user
+            # newgrp docker
+
             sudo apt-get update
             sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
             sudo apt-get update
@@ -289,6 +292,7 @@ Resources:
             sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
             sudo usermod -a -G docker ubuntu
             newgrp docker
+
             docker run -itd -p 80:80 -p 5000:5000 --name anagram qader/anagram:1.0
             # echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance $(hostname -f)</h2></html>" >> /var/www/html/index.html
             # service httpd start
