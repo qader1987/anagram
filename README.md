@@ -8,7 +8,7 @@ VPC, public subnets, private subnets, NAT gateway, Internet gateway, ELB, EC2 in
 
 deploy.sh -> can be used to create/update cloudformation stack via aws-cli, it includes all the required input parameters.
 
-Testing Autoscaling:
+<!-- Testing Autoscaling:
 
 Approach 1: 
 This will be using 'stress' utility which has been installed via UserData on the instances,
@@ -18,5 +18,4 @@ the CloudWatch alarm which will trigger the scaling policy.
 Approach 2:
 Below scripts can be executed which will trigger the scaling policies
 "scripts/scaleup.sh" -> can be used to execute scaleUpPolicy via aws-cli
-"scripts/scaledown.sh" -> can be used to execute scaleDownPolicy via aws-cli
-
+"scripts/scaledown.sh" -> can be used to execute scaleDownPolicy via aws-cli -->
