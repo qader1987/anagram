@@ -19,8 +19,3 @@ Approach 2:
 Below scripts can be executed which will trigger the scaling policies
 "scripts/scaleup.sh" -> can be used to execute scaleUpPolicy via aws-cli
 "scripts/scaledown.sh" -> can be used to execute scaleDownPolicy via aws-cli -->
-
-Improvements:
-1. Continuous deployment - Jenkins or codepipeline
-2. ECS cluster with fargate instead of EC2 instances
-3. 
