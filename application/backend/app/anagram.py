@@ -20,7 +20,7 @@ class Anagram:
         anagrams = set()
         for word in dictionary:
             # Check if all the unique letters in word are in the
-            # scrambled letters
+            # scrambled letters, then print
             if not set(word) - set(letters):
                 check_word = set()
                 # Check if the count of each letter is less than or equal
