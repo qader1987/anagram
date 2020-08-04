@@ -213,29 +213,29 @@ Resources:
           ToPort: 80
       VpcId: !Ref VPC
 
-  # ELB:
-  #   Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
-  #   Properties:
-  #     ConnectionDrainingPolicy:
-  #       Enabled: true
-  #       Timeout: 30
-  #     CrossZone: true
-  #     HealthCheck:
-  #       HealthyThreshold: '2'
-  #       Interval: '180'
-  #       Target: 'HTTP:80/'
-  #       Timeout: '5'
-  #       UnhealthyThreshold: '2'
-  #     LoadBalancerName: elb
-  #     Listeners:
-  #       - InstancePort: '80'
-  #         InstanceProtocol: HTTP
-  #         LoadBalancerPort: '80'
-  #         Protocol: HTTP
-  #     Scheme: internet-facing
-  #     SecurityGroups:
-  #       - !Ref ELBSecurityGroup
-  #     Subnets: [!Ref PubSubnet1, !Ref PubSubnet2]
+  ELB:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      ConnectionDrainingPolicy:
+        Enabled: true
+        Timeout: 30
+      CrossZone: true
+      HealthCheck:
+        HealthyThreshold: '2'
+        Interval: '180'
+        Target: 'HTTP:80/'
+        Timeout: '5'
+        UnhealthyThreshold: '2'
+      LoadBalancerName: elb
+      Listeners:
+        - InstancePort: '80'
+          InstanceProtocol: HTTP
+          LoadBalancerPort: '80'
+          Protocol: HTTP
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ELBSecurityGroup
+      Subnets: [!Ref PubSubnet1, !Ref PubSubnet2]
 
   EC2SecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -251,11 +251,11 @@ Resources:
           ToPort: 80
         - FromPort: 8080
           IpProtocol: tcp
-          CidrIp: 140.82.112.0/20   # Required for github-jenkins webhook
+          CidrIp: 140.82.112.0/20   # Required for github-jenkins webhook; used by jenkins server
           ToPort: 8080
         - FromPort: 8080
           IpProtocol: tcp
-          CidrIp: 192.30.252.0/22    # Required for github-jenkins webhook
+          CidrIp: 192.30.252.0/22    # Required for github-jenkins webhook; used by jenkins server
           ToPort: 8080                    
       VpcId: !Ref VPC
 
@@ -298,80 +298,80 @@ Resources:
             # service httpd start
             # /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup          
 
-  # AutoScalingGroup:
-  #   Type: 'AWS::AutoScaling::AutoScalingGroup'
-  #   Properties:
-  #     MinSize: '1'
-  #     MaxSize: '3'
-  #     DesiredCapacity: '1'
-  #     LaunchConfigurationName: !Ref LaunchConfiguration
-  #     VPCZoneIdentifier: [!Ref PrivSubnet1, !Ref PrivSubnet1]
-  #     LoadBalancerNames:
-  #       - !Ref ELB
-  #     HealthCheckGracePeriod: 360
-  #     HealthCheckType: ELB
-  #   CreationPolicy:
-  #     ResourceSignal:
-  #       Count: 1
-  #       Timeout: PT10M
-  #   UpdatePolicy:
-  #     AutoScalingRollingUpdate:
-  #       MaxBatchSize: '2'
-  #       MinInstancesInService: '1'
-  #       PauseTime: PT10M
-  #       SuspendProcesses:
-  #         - AlarmNotification
-  #       WaitOnResourceSignals: true
+  AutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      MinSize: '1'
+      MaxSize: '3'
+      DesiredCapacity: '1'
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      VPCZoneIdentifier: [!Ref PrivSubnet1, !Ref PrivSubnet1]
+      LoadBalancerNames:
+        - !Ref ELB
+      HealthCheckGracePeriod: 360
+      HealthCheckType: ELB
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '2'
+        MinInstancesInService: '1'
+        PauseTime: PT10M
+        SuspendProcesses:
+          - AlarmNotification
+        WaitOnResourceSignals: true
 
-  # scaleUpPolicy:
-  #   Type: 'AWS::AutoScaling::ScalingPolicy'
-  #   Properties:
-  #     AdjustmentType: ChangeInCapacity
-  #     AutoScalingGroupName: !Ref AutoScalingGroup
-  #     Cooldown: '60'
-  #     ScalingAdjustment: '1'
+  scaleUpPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '1'
 
-  # scaleDownPolicy:
-  #   Type: 'AWS::AutoScaling::ScalingPolicy'
-  #   Properties:
-  #     AdjustmentType: ChangeInCapacity
-  #     AutoScalingGroupName: !Ref AutoScalingGroup
-  #     Cooldown: '60'
-  #     ScalingAdjustment: '-1'
+  scaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
 
-  # CpuAlarmHigh:
-  #   Type: 'AWS::CloudWatch::Alarm'
-  #   Properties:
-  #     AlarmDescription: Scale-up if CPU > 80% for 3 minutes
-  #     MetricName: CPUUtilization
-  #     Namespace: AWS/EC2
-  #     Statistic: Average
-  #     Period: '180'
-  #     EvaluationPeriods: '1'
-  #     Threshold: '80'
-  #     AlarmActions:
-  #       - !Ref scaleUpPolicy
-  #     Dimensions:
-  #       - Name: AutoScalingGroupName
-  #         Value: !Ref AutoScalingGroup
-  #     ComparisonOperator: GreaterThanThreshold
+  CpuAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 80% for 3 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '180'
+      EvaluationPeriods: '1'
+      Threshold: '80'
+      AlarmActions:
+        - !Ref scaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref AutoScalingGroup
+      ComparisonOperator: GreaterThanThreshold
 
-  # CpuAlarmLow:
-  #   Type: 'AWS::CloudWatch::Alarm'
-  #   Properties:
-  #     AlarmDescription: Scale-down if CPU < 50% for 3 minutes
-  #     MetricName: CPUUtilization
-  #     Namespace: AWS/EC2
-  #     Statistic: Average
-  #     Period: '180'
-  #     EvaluationPeriods: '1'
-  #     Threshold: '50'
-  #     AlarmActions:
-  #       - !Ref scaleDownPolicy
-  #     Dimensions:
-  #       - Name: AutoScalingGroupName
-  #         Value: !Ref AutoScalingGroup
-  #     ComparisonOperator: LessThanThreshold
+  CpuAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 50% for 3 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '180'
+      EvaluationPeriods: '1'
+      Threshold: '50'
+      AlarmActions:
+        - !Ref scaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref AutoScalingGroup
+      ComparisonOperator: LessThanThreshold
 
 Outputs:
   VPC:
@@ -391,11 +391,11 @@ Outputs:
     Value: !Join [ ",", [ !Ref PrivSubnet1, !Ref PrivSubnet2 ]]
     Export:
       Name: !Sub '${AWS::StackName}-PrivSubnets'
-  # ELB:
-  #   Value: !Join
-  #     - ''
-  #     - - 'http://'
-  #       - !GetAtt
-  #         - ELB
-  #         - DNSName
-  #   Description: URL of the load balancer
+  ELB:
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - ELB
+          - DNSName
+    Description: URL of the load balancer
