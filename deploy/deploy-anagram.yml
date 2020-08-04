@@ -1,0 +1,11 @@
+---
+- hosts: webserver
+  gather_facts: yes
+  become: true
+  become_user: root
+  tasks:
+    - name: Remove Old Container & Image
+      shell: docker rm -f anagram && docker rmi -f qader/anagram:1.0
+
+    - name: Deploy New Image & run container
+      shell: docker run -itd -p 80:80 -p 5000:5000 --name anagram qader/anagram:1.0

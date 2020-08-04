@@ -35,7 +35,10 @@ pipeline{
         stage("Deploy Application"){
             steps{
                 echo "Deploy Application"
-                sh 'echo "ansible command"'
+                sh '''
+                    cd deploy
+                    ansible-playbook -i inventory -e ansible_user=jenkins deploy-anagram.yml
+                '''
             }
         }
         stage("Cleaning up"){
