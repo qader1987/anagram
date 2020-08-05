@@ -7,4 +7,3 @@ infra.yaml -> will create the following resources
 VPC, public subnets, private subnets, NAT gateway, Internet gateway, ELB, EC2 instances, Security groups, Autoscaling group, launch configuration.
 
 deploy.sh -> can be used to create/update cloudformation stack via aws-cli, it includes all the required input parameters.
-
