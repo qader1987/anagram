@@ -271,37 +271,17 @@ Resources:
       UserData: 
         Fn::Base64:
           !Sub |
-            #!/bin/bash -ex
-            # sudo amazon-linux-extras install epel -y
-            # yum install stress -y
-            # yum -y install httpd          
-            # chkconfig httpd on
-
-            # sudo yum update -y
-            # sudo amazon-linux-extras install docker
-            # sudo yum install docker
-            # sudo service docker start
-            # sudo usermod -a -G docker ec2-user
-            # newgrp docker
-            
-            ### Test apache ###
-            sudo apt-get update
-            sudo apt-get -y install apache2
-            sudo ufw allow 'Apache'
-            echo "<html><h1>Welcome, this is a test site!!</h1><br><h2>You are currently directed to the instance $(hostname -f)</h2></html>" >> /var/www/html/index.html
-            sudo systemctl restart apache2.service
-            service httpd start
-
+            #!/bin/bash -ex           
+            ### Installing docker ###
             sudo apt-get update
             sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+            sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
             sudo apt-get update
             sudo apt-get -y install docker-ce docker-ce-cli containerd.io
-            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-            sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
             sudo usermod -a -G docker ubuntu
             newgrp docker
-
-            # docker run -itd -p 80:80 -p 5000:5000 --name anagram qader/anagram:1.0
+            docker run -itd -p 80:80 -p 5000:5000 --name anagram qader/anagram:1.0
 
             ### Install cfn-signal ###
             sudo apt-get update -y
