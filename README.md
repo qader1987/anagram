@@ -8,4 +8,3 @@ VPC, public subnets, private subnets, NAT gateway, Internet gateway, ELB, EC2 in
 
 deploy.sh -> can be used to create/update cloudformation stack via aws-cli, it includes all the required input parameters.
 
-
